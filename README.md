@@ -48,4 +48,4 @@ This program was build using API documentation listed on  https://timdorr.docs.a
 
 
 # Legal Agreement/ Disclaimer
-This program is provided as is. This program is not supported or endorsed by Tesla Motors. By using this software, you agree to not hold me (Zobair Shahadat ) for anything.
+This program is provided as is. This program is not supported or endorsed by Tesla Motors. By using this software, you agree to not hold me (Zobair Shahadat ) liable for anything.
