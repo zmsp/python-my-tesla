@@ -2,7 +2,6 @@
 # Usage:
 
 ```python
-
 import myTesla
 
 my_model_s = myTesla.connect('test@example.com', 'MySecurePassword')
@@ -14,9 +13,10 @@ print(door_lock)
 ```
 
 # Documentation: 
-This program was build using API documentation listed on  https://timdorr.docs.apiary.io/#. The functions closely follow the API documentation. Please see this page for detailed information.
+This program was build using API documentation listed on  https://tesla-api.timdorr.com/. The functions closely follow the API documentation. Please see this page for detailed information of the function parameters.
 
 ## Function Descriptions
+* `myTesla.connect.get_access_token`: Returns access token information that could be used to authenticate instead of email/password.
 * `myTesla.connect.vehicles`: Retrieve a list of your owned vehicles
 * `myTesla.connect.mobile_enabled`: Determines if mobile access to the vehicle is enabled.
 * `myTesla.connect.charge_state`: Returns the state of charge in the battery.

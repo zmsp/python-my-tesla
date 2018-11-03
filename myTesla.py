@@ -1,13 +1,15 @@
-
 import requests
+
+
 class connect():
     def __init__(self, email='', password='',
                  vehicle_index=0,
                  base_url="https://owner-api.teslamotors.com",
+                 access_token=None,
                  OWNERAPI_CLIENT_ID="81527cff06843c8634fdc09e8ac0abefb46ac849f38fe1e431c2ef2106796384",
-                 OWNERAPI_CLIENT_SECRET="c7257eb71a564034f9419ee651c7d0e5f7aa6bfbd18bafb5c5c033b093bb2fa3"):
+                 OWNERAPI_CLIENT_SECRET="c7257eb71a564034f9419ee651c7d0e5f7aa6bfbd18bafb5c5c033b093bb2fa3",
+                 ):
         '''
-
         :param email: Your mytesla username
         :param password: Your myTesla password
         :param vehicle_index: Index of your vehicle, if you have multiple vehicle
@@ -15,24 +17,43 @@ class connect():
         :param OWNERAPI_CLIENT_ID:  # This value was grabbed from https://timdorr.docs.apiary.io/#reference/authentication/tokens/get-an-access-token
         :param OWNERAPI_CLIENT_SECRET: # This value was grabbed from https://timdorr.docs.apiary.io/#reference/authentication/tokens/get-an-access-token
         '''
-        self.oauth_param = {
+
+        self.api_url = base_url + "/api/1"
+
+        if (access_token == None):
+            access_token_resp = self.get_access_token(email=email, password=password,
+                                              base_url="https://owner-api.teslamotors.com",
+                                              OWNERAPI_CLIENT_ID="81527cff06843c8634fdc09e8ac0abefb46ac849f38fe1e431c2ef2106796384",
+                                              OWNERAPI_CLIENT_SECRET="c7257eb71a564034f9419ee651c7d0e5f7aa6bfbd18bafb5c5c033b093bb2fa3",
+                                              )
+            access_token = access_token_resp["access_token"]
+        self.headers = {"Authorization": "Bearer {}".format(access_token)}
+
+        if vehicle_index is not None:
+            vehicles = self.vehicles()
+            self.vehicle_id = vehicles["response"][vehicle_index]["id"]
+
+    def get_access_token(self, email='', password='',
+                      base_url="https://owner-api.teslamotors.com",
+                      OWNERAPI_CLIENT_ID="81527cff06843c8634fdc09e8ac0abefb46ac849f38fe1e431c2ef2106796384",
+                      OWNERAPI_CLIENT_SECRET="c7257eb71a564034f9419ee651c7d0e5f7aa6bfbd18bafb5c5c033b093bb2fa3",
+                      ):
+        '''
+        :param email: Your mytesla username
+        :param password: Your myTesla password
+        :param base_url:  # This values was grabbed from https://timdorr.docs.apiary.io/#reference/authentication/tokens/get-an-access-token
+        :param OWNERAPI_CLIENT_ID:  # This value was grabbed from https://timdorr.docs.apiary.io/#reference/authentication/tokens/get-an-access-token
+        :param OWNERAPI_CLIENT_SECRET: # This value was grabbed from https://timdorr.docs.apiary.io/#reference/authentication/tokens/get-an-access-token
+        '''
+        oauth_param = {
             "grant_type": "password",
             "client_id": OWNERAPI_CLIENT_ID,
             "client_secret": OWNERAPI_CLIENT_SECRET,
             "email": email,
             "password": password
         }
-        self.api_url = base_url + "/api/1"
 
-        resp = requests.post(base_url + "/oauth/token", data=self.oauth_param).json()
-        self.headers = {"Authorization": "Bearer {}".format(resp["access_token"])}
-
-        # if vehicle_vin is not None:
-        #     pass
-        # TODO
-        if vehicle_index is not None:
-            vehicles = self.vehicles()
-            self.vehicle_id = vehicles["response"][vehicle_index]["id"]
+        return requests.post(base_url + "/oauth/token", data=oauth_param).json()
 
     # Vehicles
     def vehicles(self):
@@ -84,12 +105,12 @@ class connect():
         Returns the driving and position state of the vehicle.
         '''
         return self.get_data_request("gui_settings")
+
     def gui_settings(self):
         '''
         Returns various information about the GUI settings of the car, such as unit format and range display.
         '''
         return self.get_data_request("gui_settings")
-
 
     def vehicle_state(self):
         '''
