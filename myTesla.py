@@ -1,13 +1,13 @@
 import requests
 
 
-class connect():
+class connect:
     def __init__(self, email='', password='',
                  vehicle_index=0,
                  base_url="https://owner-api.teslamotors.com",
                  access_token=None,
-                 OWNERAPI_CLIENT_ID="81527cff06843c8634fdc09e8ac0abefb46ac849f38fe1e431c2ef2106796384",
-                 OWNERAPI_CLIENT_SECRET="c7257eb71a564034f9419ee651c7d0e5f7aa6bfbd18bafb5c5c033b093bb2fa3",
+                 ownerapi_client_id="81527cff06843c8634fdc09e8ac0abefb46ac849f38fe1e431c2ef2106796384",
+                 ownerapi_client_secret="c7257eb71a564034f9419ee651c7d0e5f7aa6bfbd18bafb5c5c033b093bb2fa3",
                  ):
         '''
         :param email: Your mytesla username
@@ -20,24 +20,37 @@ class connect():
 
         self.api_url = base_url + "/api/1"
 
-        if (access_token == None):
+        if (access_token is None):
             access_token_resp = self.get_access_token(email=email, password=password,
-                                              base_url="https://owner-api.teslamotors.com",
-                                              OWNERAPI_CLIENT_ID="81527cff06843c8634fdc09e8ac0abefb46ac849f38fe1e431c2ef2106796384",
-                                              OWNERAPI_CLIENT_SECRET="c7257eb71a564034f9419ee651c7d0e5f7aa6bfbd18bafb5c5c033b093bb2fa3",
+                                                      base_url="https://owner-api.teslamotors.com",
+                                                      ownerapi_client_id=ownerapi_client_id,
+                                                      ownerapi_client_secret=ownerapi_client_secret,
                                               )
             access_token = access_token_resp["access_token"]
         self.headers = {"Authorization": "Bearer {}".format(access_token)}
 
         if vehicle_index is not None:
-            vehicles = self.vehicles()
+            self.select_vehicle(vehicle_index=vehicle_index)
+
+    def select_vehicle(self, vehicle_index=None, vin=None, vehicle_id=None):
+        vehicles = self.vehicles()
+        if (vehicle_index is not None):
             self.vehicle_id = vehicles["response"][vehicle_index]["id"]
+        elif (vin != None):
+            for vehicle in vehicles["response"]:
+                if (vehicle["vin"] == vin):
+                    self.vehicle_id = vehicle["id"]
+                    break
+        elif (id is not None):
+            self.vehicle_id = vehicle_id
+
+
 
     def get_access_token(self, email='', password='',
-                      base_url="https://owner-api.teslamotors.com",
-                      OWNERAPI_CLIENT_ID="81527cff06843c8634fdc09e8ac0abefb46ac849f38fe1e431c2ef2106796384",
-                      OWNERAPI_CLIENT_SECRET="c7257eb71a564034f9419ee651c7d0e5f7aa6bfbd18bafb5c5c033b093bb2fa3",
-                      ):
+                         base_url="https://owner-api.teslamotors.com",
+                         ownerapi_client_id="81527cff06843c8634fdc09e8ac0abefb46ac849f38fe1e431c2ef2106796384",
+                         ownerapi_client_secret="c7257eb71a564034f9419ee651c7d0e5f7aa6bfbd18bafb5c5c033b093bb2fa3",
+                         ):
         '''
         :param email: Your mytesla username
         :param password: Your myTesla password
@@ -47,8 +60,8 @@ class connect():
         '''
         oauth_param = {
             "grant_type": "password",
-            "client_id": OWNERAPI_CLIENT_ID,
-            "client_secret": OWNERAPI_CLIENT_SECRET,
+            "client_id": ownerapi_client_id,
+            "client_secret": ownerapi_client_secret,
             "email": email,
             "password": password
         }
@@ -187,7 +200,7 @@ class connect():
         :param limit_value: The percentage value Example: 75.
         '''
         return self.post_command("set_charge_limit",
-                                 command_url="/vehicles/{vehicle_id}/command/{command_name}?percent={limit_valie}".format(
+                                 command_url="/vehicles/{{vehicle_id}}/command/{command_name}?percent={limit_value}".format(
                                      limit_value=limit_value))
 
     def charge_start(self):
@@ -240,7 +253,7 @@ class connect():
         :return:
         '''
         return self.post_command("set_temps",
-                                 command_url="/vehicles/{vehicle_id}/command/{command_name}?driver_temp={driver_temp}&passenger_temp={passenger_temp}".format(
+                                 command_url="/vehicles/{{vehicle_id}}/command/{{command_name}}?driver_temp={driver_temp}&passenger_temp={passenger_temp}".format(
                                      driver_temp=driver_temp, passenger_temp=passenger_temp))
 
     def auto_conditioning_start(self):
@@ -257,7 +270,7 @@ class connect():
         '''
         return self.post_command("auto_conditioning_stop")
 
-    def sun_roof_control(self, state=None, percent=None):
+    def sun_roof_control(self, state="", percent=""):
         '''
         Controls the car's panoramic roof, if installed.
         :param state:  Required, The desired state of the panoramic roof. The approximate percent open values for each state are open = 100%, close = 0%, comfort = 80%, and vent = ~15% Exam
@@ -265,7 +278,7 @@ class connect():
         :return:
         '''
         return self.post_command("sun_roof_control",
-                                 command_url="/vehicles/{vehicle_id}/command/{command_name}?state={state}&percent={percent}".format(
+                                 command_url="/vehicles/{{vehicle_id}}/command/{{command_name}}?state={state}&percent={percent}".format(
                                      state=state, percent=percent))
 
     def remote_start_drive(self, password):
@@ -274,7 +287,7 @@ class connect():
         :param password: the password to the authenticated my.teslamotors.com account. Example: edisonsux.
         '''
         return self.post_command("remote_start_drive",
-                                 command_url="/vehicles/{vehicle_id}/command/{command_name}?password={password}".format(
+                                 command_url="/vehicles/{{vehicle_id}}/command/{{command_name}}?password={password}".format(
                                      password=password))
 
     def trunk_open(self, which_trunk):

@@ -17,6 +17,7 @@ This program was build using API documentation listed on  https://tesla-api.timd
 
 ## Function Descriptions
 * `myTesla.connect.get_access_token`: Returns access token information that could be used to authenticate instead of email/password.
+* `myTesla.connect.select_vehicle`: Switches car based on index/vin/or vehicle_id if you have multiple vehicle on your account.
 * `myTesla.connect.vehicles`: Retrieve a list of your owned vehicles
 * `myTesla.connect.mobile_enabled`: Determines if mobile access to the vehicle is enabled.
 * `myTesla.connect.charge_state`: Returns the state of charge in the battery.
