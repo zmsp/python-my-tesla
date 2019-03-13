@@ -117,7 +117,7 @@ class connect:
         '''
         Returns the driving and position state of the vehicle.
         '''
-        return self.get_data_request("gui_settings")
+        return self.get_data_request("drive_state")
 
     def gui_settings(self):
         '''
@@ -296,4 +296,4 @@ class connect:
         :param which_trunk: The trunk to open. rear and front are the only options Example: rear
         '''
         data = {"which_trunk": which_trunk}
-        return self.post_command("trunk_open", data=data)
+        return self.post_command("trunk_open",command_url="/vehicles/{vehicle_id}/command/actuate_trunk", data = data)
