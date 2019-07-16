@@ -131,6 +131,11 @@ class connect:
         '''
         return self.get_data_request("vehicle_state")
 
+    def nearby_charging_sites(self):
+        '''
+        Returns a list of nearby Tesla-operated charging stations. (Requires car software version 2018.48 or higher.)
+        '''
+        return self.get_data_request("nearby_charging_sites")
     # Vehicle Commands
     def post_command(self, command_name, data="", command_url="/vehicles/{vehicle_id}/command/{command_name}"):
         '''

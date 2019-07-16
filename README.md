@@ -1,3 +1,7 @@
+# Install
+You can install latest stable version from PyPI:
+
+```pip3 install myTesla```
 
 # Usage:
 
