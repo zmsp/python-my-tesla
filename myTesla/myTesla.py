@@ -200,12 +200,8 @@ class connect:
         :param limit_value: number. Example: 80
         :return:
         '''
-        '''
-        Set the charge limit to a custom percentage.
-        :param limit_value: The percentage value Example: 75.
-        '''
         return self.post_command("set_charge_limit",
-                                 command_url="/vehicles/{{vehicle_id}}/command/{command_name}?percent={limit_value}".format(
+                                 command_url="/vehicles/{{vehicle_id}}/command/{{command_name}}?percent={limit_value}".format(
                                      limit_value=limit_value))
 
     def charge_start(self):
