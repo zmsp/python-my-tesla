@@ -16,8 +16,39 @@ print(charge_state)
 print(door_lock)
 ```
 
+
+
+
 # Documentation: 
-This program was build using API documentation listed on  https://tesla-api.timdorr.com/. The functions closely follow the API documentation. Please see this page for detailed information of the function parameters.
+This program was build using API documentation listed on  [https://tesla-api.timdorr.com/](https://tesla-api.timdorr.com/.). The functions closely follow the API documentation. Please see this page for detailed information of the function parameters.
+
+## Initiating connection
+In order to initiate connection, the following information is needed.  
+
+The arguements for initiating the connection is the following:  
+
+```python
+def __init__(self, email='', password='',
+            vehicle_index=0,
+            base_url="https://owner-api.teslamotors.com",
+            access_token=None,
+            tesla_backend_token_response=None,
+            ownerapi_client_id="81527cff06843c8634fdc09e8ac0abefb46ac849f38fe1e431c2ef2106796384",
+            ownerapi_client_secret="c7257eb71a564034f9419ee651c7d0e5f7aa6bfbd18bafb5c5c033b093bb2fa3",
+            )
+```
+### Connection arguement description descriptioons: 
+
+The details of these parameters can be found on this page See https://tesla-api.timdorr.com/api-basics/authentication
+* `email`: Your mytesla username
+* `password`: Your mytesla password
+* `vehicle_index`: Index of your vehicle, if you have multiple vehicles
+* `access_token`:  # Access token can be used instead of email and password.
+* `tesla_backend_token_response`: # A backend response can be used instead of email/password or accesss token. The format of the backend response is documented here https://tesla-api.timdorr.com/api-basics/authentication#response
+* `base_url`: base_url is taken from https://timdorr.docs.apiary.io/#reference/authentication/tokens/get-an-access-token
+* `OWNERAPI_CLIENT_ID`: OWNERAPI_CLIENT_ID is taken from https://tesla-api.timdorr.com/api-basics/authentication#post-oauth-token-grant_type-password
+* `OWNERAPI_CLIENT_SECRET`:  OWNERAPI_CLIENT_SECRET is taken from https://tesla-api.timdorr.com/api-basics/authentication#post-oauth-token-grant_type-password
+
 
 ## Function Descriptions
 * `myTesla.connect.get_access_token`: Returns access token information that could be used to authenticate instead of email/password.
@@ -49,8 +80,5 @@ This program was build using API documentation listed on  https://tesla-api.timd
 * `myTesla.connect.trunk_open`: Open the trunk or frunk. Call the endpoint again to close (this only works on rear powered trunks)
 
 
-
-
-
 # Legal Agreement/ Disclaimer
-This program is provided as is. This program is not supported or endorsed by Tesla Motors. By using this software, you agree to not hold me (Zobair Shahadat ) liable for anything.
+This program is provided as is. This program is not supported or endorsed by Tesla Motors. By using this software, you agree to not hold me (Zobair Shahadat ) and any of the contributers liable for anything.

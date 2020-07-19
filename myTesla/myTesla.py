@@ -1,33 +1,43 @@
 import requests
-
+from datetime import datetime
 
 class connect:
     def __init__(self, email='', password='',
-                 vehicle_index=0,
-                 base_url="https://owner-api.teslamotors.com",
-                 access_token=None,
-                 ownerapi_client_id="81527cff06843c8634fdc09e8ac0abefb46ac849f38fe1e431c2ef2106796384",
-                 ownerapi_client_secret="c7257eb71a564034f9419ee651c7d0e5f7aa6bfbd18bafb5c5c033b093bb2fa3",
-                 ):
+                vehicle_index=0,
+                base_url="https://owner-api.teslamotors.com",
+                access_token=None,
+                tesla_backend_token_response=None,
+                ownerapi_client_id="81527cff06843c8634fdc09e8ac0abefb46ac849f38fe1e431c2ef2106796384",
+                ownerapi_client_secret="c7257eb71a564034f9419ee651c7d0e5f7aa6bfbd18bafb5c5c033b093bb2fa3",
+                ):
         '''
+        The details of these parameters can be found on this page See https://tesla-api.timdorr.com/api-basics/authentication
         :param email: Your mytesla username
-        :param password: Your myTesla password
+        :param password: Your mytesla password
         :param vehicle_index: Index of your vehicle, if you have multiple vehicle
-        :param base_url:  # This values was grabbed from https://timdorr.docs.apiary.io/#reference/authentication/tokens/get-an-access-token
-        :param OWNERAPI_CLIENT_ID:  # This value was grabbed from https://timdorr.docs.apiary.io/#reference/authentication/tokens/get-an-access-token
-        :param OWNERAPI_CLIENT_SECRET: # This value was grabbed from https://timdorr.docs.apiary.io/#reference/authentication/tokens/get-an-access-token
+        :param access_token:  # Access token can be used instead of email and password.
+        :param tesla_backend_token_response: # A backend response can be used instead of email/password or accesss token. The format of the backend response is documented here https://tesla-api.timdorr.com/api-basics/authentication#response
+        :param base_url: base_url is taken from https://timdorr.docs.apiary.io/#reference/authentication/tokens/get-an-access-token
+        :param OWNERAPI_CLIENT_ID: OWNERAPI_CLIENT_ID is taken from https://tesla-api.timdorr.com/api-basics/authentication#post-oauth-token-grant_type-password
+        :param OWNERAPI_CLIENT_SECRET:  OWNERAPI_CLIENT_SECRET is taken from https://tesla-api.timdorr.com/api-basics/authentication#post-oauth-token-grant_type-password
         '''
 
+        self.base_url = base_url
         self.api_url = base_url + "/api/1"
 
+        self.ownerapi_client_id = ownerapi_client_id
+        self.ownerapi_client_secret = ownerapi_client_secret
+
+        self.tesla_backend_token_response = tesla_backend_token_response
+
+        if tesla_backend_token_response:
+            access_token = tesla_backend_token_response['access_token']
+            token_type = tesla_backend_token_response['token_type']
+
         if (access_token is None):
-            access_token_resp = self.get_access_token(email=email, password=password,
-                                                      base_url="https://owner-api.teslamotors.com",
-                                                      ownerapi_client_id=ownerapi_client_id,
-                                                      ownerapi_client_secret=ownerapi_client_secret,
-                                              )
-            access_token = access_token_resp["access_token"]
-        self.headers = {"Authorization": "Bearer {}".format(access_token)}
+            access_token_resp = self.get_access_token(email=email, password=password)
+        else: # Lets assume the user knows what he is doing. Assign the given token to auth header, assuming it is still type 'Bearer'
+            self.headers = {"Authorization": "Bearer {}".format(access_token)}
 
         if vehicle_index is not None:
             self.select_vehicle(vehicle_index=vehicle_index)
@@ -46,27 +56,63 @@ class connect:
 
 
 
-    def get_access_token(self, email='', password='',
-                         base_url="https://owner-api.teslamotors.com",
-                         ownerapi_client_id="81527cff06843c8634fdc09e8ac0abefb46ac849f38fe1e431c2ef2106796384",
-                         ownerapi_client_secret="c7257eb71a564034f9419ee651c7d0e5f7aa6bfbd18bafb5c5c033b093bb2fa3",
-                         ):
+    def get_access_token(self, email='', password='', force = False):
         '''
         :param email: Your mytesla username
         :param password: Your myTesla password
-        :param base_url:  # This values was grabbed from https://timdorr.docs.apiary.io/#reference/authentication/tokens/get-an-access-token
-        :param OWNERAPI_CLIENT_ID:  # This value was grabbed from https://timdorr.docs.apiary.io/#reference/authentication/tokens/get-an-access-token
-        :param OWNERAPI_CLIENT_SECRET: # This value was grabbed from https://timdorr.docs.apiary.io/#reference/authentication/tokens/get-an-access-token
+        :param force: Renew regardless of the expiry date
         '''
-        oauth_param = {
-            "grant_type": "password",
-            "client_id": ownerapi_client_id,
-            "client_secret": ownerapi_client_secret,
-            "email": email,
-            "password": password
-        }
+        if self.tesla_backend_token_response:
+            if datetime.fromtimestamp(self.tesla_backend_token_response['created_at']+self.tesla_backend_token_response['expires_in']-5*86400) < datetime.utcnow(): # If our current access token is set to expire in the next 5 days we renew just to be save
+                oauth_param = {
+                    "grant_type": "refresh_token",
+                    "client_id": self.ownerapi_client_id,
+                    "client_secret": self.ownerapi_client_secret,
+                    "refresh_token": self.tesla_backend_token_response['refresh_token'],
+                }
+            else: # Everything is fine with our current token so lets not make a redundant API call
+                if force: # Unless the force is with us
+                    oauth_param = {
+                        "grant_type": "refresh_token",
+                        "client_id": self.ownerapi_client_id,
+                        "client_secret": self.ownerapi_client_secret,
+                        "refresh_token": self.tesla_backend_token_response['refresh_token'],
+                    }
+                else:
+                    return self.tesla_backend_token_response
+        else:
+            oauth_param = {
+                "grant_type": "password",
+                "client_id": self.ownerapi_client_id,
+                "client_secret": self.ownerapi_client_secret,
+                "email": email,
+                "password": password,
+            }
 
-        return requests.post(base_url + "/oauth/token", data=oauth_param).json()
+        try:
+            # Note: This is 'sunny weather programming' assuming nothing goes ever wrong between your coder brain, the infrastructure in between and the APIs coder brain!!
+            # tesla_api_response = requests.post(self.base_url + "/oauth/token", data=oauth_param).json()
+            # Proper error handling was aadded based on  the note from @one4many
+            r = requests.post(self.base_url + "/oauth/token",
+                          data=oauth_param)
+            r.raise_for_status()
+            tesla_api_response = r.json()
+        except requests.exceptions.RequestException as e:
+            raise SystemExit(e)
+
+        self.tesla_backend_token_response = tesla_api_response
+        self.headers = {"Authorization": "{} {}".format(tesla_api_response['token_type'], tesla_api_response['access_token'])}
+        return tesla_api_response
+
+    def requests_get(self, *args, **kwargs):
+        if self.tesla_backend_token_response and datetime.fromtimestamp(self.tesla_backend_token_response['created_at']+self.tesla_backend_token_response['expires_in']-5*86400) < datetime.utcnow():
+            self.get_access_token()
+        return(requests.get(*args, **kwargs))
+
+    def requests_post(self, *args, **kwargs):
+        if self.tesla_backend_token_response and datetime.fromtimestamp(self.tesla_backend_token_response['created_at']+self.tesla_backend_token_response['expires_in']-5*86400) < datetime.utcnow():
+            self.get_access_token()
+        return(requests.post(*args, **kwargs))
 
     # Vehicles
     def vehicles(self):
@@ -74,7 +120,7 @@ class connect:
 
         :return: Retrieve a list of your owned vehicles
         '''
-        return requests.get(self.api_url + "/vehicles", headers=self.headers).json()
+        return self.requests_get(self.api_url + "/vehicles", headers=self.headers).json()
 
     # state
     def get_data_request(self, state_name):
@@ -83,7 +129,8 @@ class connect:
         :param state_name:
         :return:
         '''
-        return requests.get(
+
+        return self.requests_get(
             self.api_url + '/vehicles/{vehicle_id}/data_request/{state_name}'.format(vehicle_id=self.vehicle_id,
                                                                                      state_name=state_name),
             headers=self.headers).json()
@@ -95,7 +142,7 @@ class connect:
         Determines if mobile access to the vehicle is enabled.
         :return:
         '''
-        return requests.get(self.api_url + '/vehicles/{vehicle_id}/mobile_enabled'.format(vehicle_id=self.vehicle_id),
+        return self.requests_get(self.api_url + '/vehicles/{vehicle_id}/mobile_enabled'.format(vehicle_id=self.vehicle_id),
                             headers=self.headers).json()
 
     def charge_state(self):
@@ -104,7 +151,6 @@ class connect:
         :return:
         '''
         return self.get_data_request("charge_state")
-        # return requests.get(self.api_url + '/vehicles/{vehicle_id}/data_request/charge_state'.format(vehicle_id=self.vehicle_id), headers=self.headers).json()
 
     def climate_state(self):
         '''
@@ -145,7 +191,7 @@ class connect:
         :param command_url:
         :return:
         '''
-        return requests.post(
+        return self.requests_post(
             self.api_url + command_url.format(vehicle_id=self.vehicle_id, command_name=command_name),
             headers=self.headers, data=data).json()
 
@@ -153,7 +199,7 @@ class connect:
         '''
         Wakes up the car from the sleep state. Necessary to get some data from the car.
         '''
-        return requests.post(self.api_url + "/vehicles/{vehicle_id}/wake_up".format(vehicle_id=self.vehicle_id),
+        return self.requests_post(self.api_url + "/vehicles/{vehicle_id}/wake_up".format(vehicle_id=self.vehicle_id),
                              headers=self.headers, data="").json()
 
     def set_valet_mode(self, on=False, password=None):
@@ -200,12 +246,8 @@ class connect:
         :param limit_value: number. Example: 80
         :return:
         '''
-        '''
-        Set the charge limit to a custom percentage.
-        :param limit_value: The percentage value Example: 75.
-        '''
         return self.post_command("set_charge_limit",
-                                 command_url="/vehicles/{{vehicle_id}}/command/{command_name}?percent={limit_value}".format(
+                                 command_url="/vehicles/{{vehicle_id}}/command/{{command_name}}?percent={limit_value}".format(
                                      limit_value=limit_value))
 
     def charge_start(self):
