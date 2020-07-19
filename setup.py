@@ -3,7 +3,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 setup(
     name='myTesla',
-    version='1.1',
+    version='1.3',
     packages=find_packages(),
     url='https://github.com/zmsp/python-my-tesla',
     license='Apache License 2.0',

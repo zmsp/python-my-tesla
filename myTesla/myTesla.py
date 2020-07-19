@@ -11,19 +11,25 @@ class connect:
                 ownerapi_client_secret="c7257eb71a564034f9419ee651c7d0e5f7aa6bfbd18bafb5c5c033b093bb2fa3",
                 ):
         '''
+        The details of these parameters can be found on this page See https://tesla-api.timdorr.com/api-basics/authentication
         :param email: Your mytesla username
-        :param password: Your myTesla password
+        :param password: Your mytesla password
         :param vehicle_index: Index of your vehicle, if you have multiple vehicle
-        :param base_url:  # This values was grabbed from https://timdorr.docs.apiary.io/#reference/authentication/tokens/get-an-access-token
-        :param OWNERAPI_CLIENT_ID:  # This value was grabbed from https://timdorr.docs.apiary.io/#reference/authentication/tokens/get-an-access-token
-        :param OWNERAPI_CLIENT_SECRET: # This value was grabbed from https://timdorr.docs.apiary.io/#reference/authentication/tokens/get-an-access-token
+        :param access_token:  # Access token can be used instead of email and password.
+        :param tesla_backend_token_response: # A backend response can be used instead of email/password or accesss token. The format of the backend response is documented here https://tesla-api.timdorr.com/api-basics/authentication#response
+        :param base_url: base_url is taken from https://timdorr.docs.apiary.io/#reference/authentication/tokens/get-an-access-token
+        :param OWNERAPI_CLIENT_ID: OWNERAPI_CLIENT_ID is taken from https://tesla-api.timdorr.com/api-basics/authentication#post-oauth-token-grant_type-password
+        :param OWNERAPI_CLIENT_SECRET:  OWNERAPI_CLIENT_SECRET is taken from https://tesla-api.timdorr.com/api-basics/authentication#post-oauth-token-grant_type-password
         '''
 
         self.base_url = base_url
+        self.api_url = base_url + "/api/1"
+
         self.ownerapi_client_id = ownerapi_client_id
         self.ownerapi_client_secret = ownerapi_client_secret
-        self.api_url = base_url + "/api/1"
+
         self.tesla_backend_token_response = tesla_backend_token_response
+
         if tesla_backend_token_response:
             access_token = tesla_backend_token_response['access_token']
             token_type = tesla_backend_token_response['token_type']
@@ -82,7 +88,18 @@ class connect:
                 "email": email,
                 "password": password,
             }
-        tesla_api_response = requests.post(self.base_url + "/oauth/token", data=oauth_param).json() # Note: This is 'sunny weather programming' assuming nothing goes ever wrong between your coder brain, the infrastructure in between and the APIs coder brain!!
+
+        try:
+            # Note: This is 'sunny weather programming' assuming nothing goes ever wrong between your coder brain, the infrastructure in between and the APIs coder brain!!
+            # tesla_api_response = requests.post(self.base_url + "/oauth/token", data=oauth_param).json()
+            # Proper error handling was aadded based on  the note from @one4many
+            r = requests.post(self.base_url + "/oauth/token",
+                          data=oauth_param)
+            r.raise_for_status()
+            tesla_api_response = r.json()
+        except requests.exceptions.RequestException as e:
+            raise SystemExit(e)
+
         self.tesla_backend_token_response = tesla_api_response
         self.headers = {"Authorization": "{} {}".format(tesla_api_response['token_type'], tesla_api_response['access_token'])}
         return tesla_api_response
@@ -112,6 +129,7 @@ class connect:
         :param state_name:
         :return:
         '''
+
         return self.requests_get(
             self.api_url + '/vehicles/{vehicle_id}/data_request/{state_name}'.format(vehicle_id=self.vehicle_id,
                                                                                      state_name=state_name),

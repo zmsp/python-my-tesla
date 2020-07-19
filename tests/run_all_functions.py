@@ -1,11 +1,24 @@
 import sys
 import myTesla as mt
 
+
+def user_prompt(question: str) -> bool:
+    """ Prompt the yes/no-*question* to the user. """
+    from distutils.util import strtobool
+
+    while True:
+        user_input = input(question + " [y/n]: ").lower()
+        try:
+            result = strtobool(user_input)
+            return result
+        except ValueError:
+            print("Please use y/n or yes/no.\n")
+
 def main(email, password):
     myTesla = mt.connect(email, password)
 
     myTesla.get_access_token(email=email, password= password)
-
+    #
     print(myTesla.vehicles())
     print(myTesla.mobile_enabled())
     print(myTesla.charge_state())
@@ -30,5 +43,12 @@ def main(email, password):
     print(myTesla.sun_roof_control(state="comfort"))
     print(myTesla.trunk_open(which_trunk="rear"))
 
+
+## run
 if '__main__' in __name__:
-    main(sys.argv[1], sys.argv[2])
+    resp = user_prompt("Are you absolutely sure to execute all the possible API calls on your vehicle? ")
+    if(resp):
+        ## username and password should be passed via system arguement
+        main(sys.argv[1], sys.argv[2])
+
+
