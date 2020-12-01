@@ -112,7 +112,10 @@ class connect:
     def requests_post(self, *args, **kwargs):
         if self.tesla_backend_token_response and datetime.fromtimestamp(self.tesla_backend_token_response['created_at']+self.tesla_backend_token_response['expires_in']-5*86400) < datetime.utcnow():
             self.get_access_token()
-        return(requests.post(*args, **kwargs))
+        data = {}
+        if "data" in kwargs:
+            data = kwargs.pop("data")
+        return(requests.post(*args, **kwargs, json=data))
 
     # Vehicles
     def vehicles(self):
@@ -247,8 +250,8 @@ class connect:
         :return:
         '''
         return self.post_command("set_charge_limit",
-                                 command_url="/vehicles/{{vehicle_id}}/command/{{command_name}}?percent={limit_value}".format(
-                                     limit_value=limit_value))
+                                 command_url="/vehicles/{vehicle_id}/command/{command_name}",
+                                 data={"percent":limit_value})
 
     def charge_start(self):
         '''
